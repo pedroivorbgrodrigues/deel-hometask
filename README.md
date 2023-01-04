@@ -124,3 +124,8 @@ When you have finished the assignment, create a github repository and send us th
   
 
 Thank you and good luck! 🙏
+
+
+## My comments
+
+It has been a long time since I worked with a project that used a ORM so I'm pretty sure that there are better ways to achieve the desired result
