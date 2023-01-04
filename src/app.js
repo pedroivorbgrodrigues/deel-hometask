@@ -40,26 +40,31 @@ app.get('/contracts',getProfile, async (req, res) => {
     res.json(contracts)
 })
 
+
+const getProfileUnpaidJobs = async (req, associationKey, profileId) => {
+    const {Job, Contract} = req.app.get('models')
+    const contracts = await Contract.findAll({
+        attributes: ['id'],
+        where: {
+            [associationKey]: profileId,
+            status: 'in_progress'
+        }
+    })
+    const contractIds = contracts.map((contract) => contract.id);
+    return Job.findAll({where: {
+        ContractId: contractIds,
+        paid: {[Op.not]: true}
+    }})
+}
+
 /**
  * Return all unpaid jobs that belongs any of the profile contracts
  * @returns jobs
  */
 app.get('/jobs/unpaid',getProfile, async (req, res) => {
-    const {Job, Contract} = req.app.get('models')
     const {profile} = req
     const belongToKey = getBelongsToKey(profile)
-    const contracts = await Contract.findAll({
-        attributes: ['id'],
-        where: {
-            [belongToKey]: profile.id,
-            status: 'in_progress'
-        }
-    })
-    const contractIds = contracts.map((contract) => contract.id);
-    const jobs = await Job.findAll({where: {
-        ContractId: contractIds,
-        paid: {[Op.not]: true}
-    }})
+    const jobs = await getProfileUnpaidJobs(req, belongToKey, profile.id)    
     res.json(jobs)
 })
 
@@ -102,8 +107,38 @@ app.post('/jobs/:job_id/pay',getProfile, async(req, res) => {
     res.json({status: true, message: 'Job paid successfully'})
 })
 
+/**
+ * Deposits a specified amount (req.body) to a specified user if within the deposit limit
+ * @returns operation success status { success: true|false, message: 'if true', error: 'if false'}
+ */
 app.post('/balances/deposit/:userId', async (req, res) => {
-    res.status(404).end()
+    const {Profile} = req.app.get('models')
+    
+    const {userId} = req.params
+    const deposit = parseFloat(req.body.amount)
+    if(Number.isNaN(deposit) || deposit < 0) {
+        res.json({success: false, error: 'Invalid deposit value'});
+        return
+    }    
+    const clientProfile = await Profile.findOne({where: {
+        id: userId,
+        type: 'client'
+    }})
+    if(clientProfile == null) {
+        res.status(404).end()
+        return
+    }
+    const unpaidJobs = await getProfileUnpaidJobs(req, 'ClientId', clientProfile.id)
+    const totalUnpaid = unpaidJobs.reduce((total, job) => total + job.price, 0);
+    const depositLimit = totalUnpaid * 0.25 // the 25% deposit limit should be a constant
+    if(deposit > depositLimit) {
+        res.json({success: false, error: 'You execed your deposit limit'})
+        return
+    }
+    clientProfile.balance += deposit
+    await clientProfile.save()
+    
+    res.json({success: true, message: 'Deposit successfull'})
 })
 
 /**

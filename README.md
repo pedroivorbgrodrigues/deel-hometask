@@ -1,11 +1,30 @@
 # DEEL BACKEND TASK
-
   
 
 💫 Welcome! 🎉
 
 
 This backend exercise involves building a Node.js/Express.js app that will serve a REST API. We imagine you should spend around 3 hours at implement this feature.
+
+## My comments
+
+I didn't do anything extra cause I'm still not fully recovered from COVID and I can't spend too much time on the test, I took beetween 3 to 4 hours acording to github
+
+It has been a long time since I worked with a project that used a ORM so I'm pretty sure that there are better ways to achieve the desired result.
+
+For example I'm not sure I had to check everytime for the profile type to specify the where clause, maybe there is already an mixin or method for it
+
+Same goes for the non terminated contracts, maybe its possible to use association scopes?
+
+I didn't add eslint so some lines has ; other don't, that is one of the reasons I usually set eslint for (code uniformity)
+
+No standard response format was specified for operations realized in the API so I used what I'm used to
+
+The task 5 restriction does not make sense to me, so altought its done I would request to talk to who defined this rule to understand before actually continuing with this task
+
+The endpoints involving date parameters need to be revised to use either a defined timezone or consider the server one (current)
+
+The task 6 and 7 didn't specify if should be only done on the database, and since it's been a while I used an ORM I would probably just do a raw query insted of trying to chain subquerys.
 
 ## Data Models
 
@@ -124,22 +143,3 @@ When you have finished the assignment, create a github repository and send us th
   
 
 Thank you and good luck! 🙏
-
-
-## My comments
-
-It has been a long time since I worked with a project that used a ORM so I'm pretty sure that there are better ways to achieve the desired result.
-
-For example I'm not sure I had to check everytime for the profile type to specify the where clause, maybe there is already an mixin or method for it
-
-Same goes for the non terminated contracts, maybe its possible to use association scopes?
-
-I didn't add eslint so some lines has ; other don't, that is one of the reasons I usually set eslint for (code uniformity)
-
-No standard response format was specified for operations realized in the API so I used what I'm used to
-
-The task 5 restriction does not make sense to me, so altought its done I'll request to talk to who defined this rule to understand
-
-The endpoints involving date parameters need to be revised to use either a defined timezone or consider the server one (current)
-
-The task 6 and 7 didn't specify if should be only done on the database, and since it's been a while I used an ORM I would probably just do a raw query insted of trying to chain subquerys.
