@@ -10,6 +10,10 @@ This backend exercise involves building a Node.js/Express.js app that will serve
 
 I didn't do anything extra cause I'm still not fully recovered from COVID and I can't spend too much time on the test, I took beetween 3 to 4 hours acording to github
 
+The reason for changin the sqlite3 version on package json is because I'm using Ubuntu 22 which doesnt comes with pythin 2.7 anylonger and the sqlite3 version 4 had a install problem with python 3
+
+I added the Insomnia file I used to test the endpoints to the project
+
 It has been a long time since I worked with a project that used a ORM so I'm pretty sure that there are better ways to achieve the desired result.
 
 For example I'm not sure I had to check everytime for the profile type to specify the where clause, maybe there is already an mixin or method for it
