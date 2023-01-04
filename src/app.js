@@ -63,6 +63,11 @@ app.get('/jobs/unpaid',getProfile, async (req, res) => {
     res.json(jobs)
 })
 
+
+/**
+ * Pays the specified job of the current client
+ * @returns operation success status { success: true|false, message: 'if true', error: 'if false'}
+ */
 app.post('/jobs/:job_id/pay',getProfile, async(req, res) => {
     const {profile} = req
     if(profile.type !== 'client') {
@@ -101,6 +106,10 @@ app.post('/balances/deposit/:userId', async (req, res) => {
     res.status(404).end()
 })
 
+/**
+ * Gets the best paid profession for the specified date range
+ * @returns profession and amount {	"profession": "Programmer", "amountPaid": 2483 }
+ */
 app.get('/admin/best-profession', async (req, res) => {
     const {Job, Contract} = req.app.get('models')
     const {start, end} = req.query
@@ -108,13 +117,12 @@ app.get('/admin/best-profession', async (req, res) => {
         res.status(400).json({error: 'Missing start or end date query parameters'})
         return
     }
-    const jobsInRange = await Job.findAll({
-        where: {
-            paymentDate: {
-                [Op.between]: [start, end]
-            }
-        }
-    })
+    const jobsInRange = await Job.findAll({where: { paymentDate: { [Op.between]: [start, end] }}})
+    if(jobsInRange.length === 0) {
+        res.status(404).json({error: 'No job found for specified range'})
+        return
+    }
+
     const contractIds = [...new Set(jobsInRange.map((job) => job.ContractId))]
     const contractsInRange = await Contract.findAll({
         where: {id: contractIds },
@@ -135,10 +143,68 @@ app.get('/admin/best-profession', async (req, res) => {
         return summary
     }, {})
     const sortedEntries = Object.entries(professionPaidSummary).sort((obj1, obj2) => {
-        return obj1[1] - obj2[1]
+        return obj2[1] - obj1[1]
     })
-    const bestPaidProfession = sortedEntries[sortedEntries.length -1]
+    
+    const bestPaidProfession = sortedEntries[0]
     res.json({profession: bestPaidProfession[0], amountPaid: bestPaidProfession[1]})
+})
+
+/**
+ * Gets up to limit most paying clients for specified date range
+ * @returns array of objects with client id, fullname and paid amount. Example:
+ * [
+	{
+		"id": 4,
+		"fullname": "Ash Kethcum",
+		"paid": 2020
+	},
+	{
+		"id": 1,
+		"fullname": "Harry Potter",
+		"paid": 242
+	},
+ */
+app.get('/admin/best-clients', async (req, res) => {
+    const {Job, Contract} = req.app.get('models')
+    const {start, end} = req.query
+    if(start == null || end == null) {
+        res.status(400).json({error: 'Missing start or end date query parameters'})
+        return
+    }
+    const limit = req.query.limit ?? 2 // default limit, add to constants file
+    const jobsInRange = await Job.findAll({where: { paymentDate: { [Op.between]: [start, end] }}})
+    
+    if(jobsInRange.length === 0) {
+        res.status(404).json({error: 'No job found for specified range'})
+        return
+    }
+
+    const contractIds = [...new Set(jobsInRange.map((job) => job.ContractId))]
+    const contractsInRange = await Contract.findAll({
+        where: {id: contractIds },
+        include: 'Client'
+    })
+    const contractPaidSummary = jobsInRange.reduce((summary, job) => {
+        if(!summary.hasOwnProperty(job.ContractId)) {
+            summary[job.ContractId] = 0
+        }
+        summary[job.ContractId] += job.price
+        return summary
+    }, {})
+    const clientsPaidSummary = contractsInRange.reduce((summary, contract) => {
+        if(!summary.hasOwnProperty(contract.Client.id)) {
+            summary[contract.Client.id] = {id: contract.Client.id, fullname: contract.Client.getFullName(), paid: 0}
+        }
+        summary[contract.Client.id].paid += contractPaidSummary[contract.id]
+        return summary
+    }, {})
+    const sortedEntries = Object.entries(clientsPaidSummary).sort((obj1, obj2) => {
+        return obj2[1].paid - obj1[1].paid
+    })
+
+    const result = Object.values(sortedEntries).slice(0, limit).map((entry) => entry[1])
+    res.json(result)
 })
 
 

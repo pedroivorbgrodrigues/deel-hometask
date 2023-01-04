@@ -129,10 +129,17 @@ Thank you and good luck! 🙏
 ## My comments
 
 It has been a long time since I worked with a project that used a ORM so I'm pretty sure that there are better ways to achieve the desired result.
+
 For example I'm not sure I had to check everytime for the profile type to specify the where clause, maybe there is already an mixin or method for it
+
 Same goes for the non terminated contracts, maybe its possible to use association scopes?
+
 I didn't add eslint so some lines has ; other don't, that is one of the reasons I usually set eslint for (code uniformity)
+
 No standard response format was specified for operations realized in the API so I used what I'm used to
+
 The task 5 restriction does not make sense to me, so altought its done I'll request to talk to who defined this rule to understand
+
 The endpoints involving date parameters need to be revised to use either a defined timezone or consider the server one (current)
+
 The task 6 and 7 didn't specify if should be only done on the database, and since it's been a while I used an ORM I would probably just do a raw query insted of trying to chain subquerys.
