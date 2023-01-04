@@ -97,5 +97,49 @@ app.post('/jobs/:job_id/pay',getProfile, async(req, res) => {
     res.json({status: true, message: 'Job paid successfully'})
 })
 
+app.post('/balances/deposit/:userId', async (req, res) => {
+    res.status(404).end()
+})
+
+app.get('/admin/best-profession', async (req, res) => {
+    const {Job, Contract} = req.app.get('models')
+    const {start, end} = req.query
+    if(start == null || end == null) {
+        res.status(400).json({error: 'Missing start or end date query parameters'})
+        return
+    }
+    const jobsInRange = await Job.findAll({
+        where: {
+            paymentDate: {
+                [Op.between]: [start, end]
+            }
+        }
+    })
+    const contractIds = [...new Set(jobsInRange.map((job) => job.ContractId))]
+    const contractsInRange = await Contract.findAll({
+        where: {id: contractIds },
+        include: 'Contractor'
+    })
+    const contractPaidSummary = jobsInRange.reduce((summary, job) => {
+        if(!summary.hasOwnProperty(job.ContractId)) {
+            summary[job.ContractId] = 0
+        }
+        summary[job.ContractId] += job.price
+        return summary
+    }, {})
+    const professionPaidSummary = contractsInRange.reduce((summary, contract) => {
+        if(!summary.hasOwnProperty(contract.Contractor.profession)) {
+            summary[contract.Contractor.profession] = 0
+        }
+        summary[contract.Contractor.profession] += contractPaidSummary[contract.id]
+        return summary
+    }, {})
+    const sortedEntries = Object.entries(professionPaidSummary).sort((obj1, obj2) => {
+        return obj1[1] - obj2[1]
+    })
+    const bestPaidProfession = sortedEntries[sortedEntries.length -1]
+    res.json({profession: bestPaidProfession[0], amountPaid: bestPaidProfession[1]})
+})
+
 
 module.exports = app;
