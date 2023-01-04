@@ -128,4 +128,6 @@ Thank you and good luck! 🙏
 
 ## My comments
 
-It has been a long time since I worked with a project that used a ORM so I'm pretty sure that there are better ways to achieve the desired result
+It has been a long time since I worked with a project that used a ORM so I'm pretty sure that there are better ways to achieve the desired result.
+For example I'm not sure I had to check everytime for the profile type to specify the where clause, maybe there is already an mixin or method for it
+Same goes for the non terminated contracts, maybe its possible to use association scopes?
