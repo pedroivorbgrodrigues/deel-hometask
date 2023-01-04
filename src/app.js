@@ -63,5 +63,39 @@ app.get('/jobs/unpaid',getProfile, async (req, res) => {
     res.json(jobs)
 })
 
+app.post('/jobs/:job_id/pay',getProfile, async(req, res) => {
+    const {profile} = req
+    if(profile.type !== 'client') {
+        res.json({success: false, error: 'Only clients can pay for jobs'});
+        return;
+    }
+    const {job_id} = req.params
+    const {Job} = req.app.get('models')
+    const jobToPay = await Job.findOne({where: {id: job_id}})
+    if(jobToPay.paid) {
+        res.json({success: false, error: 'This job was already paid'})
+        return;
+    }
+    const jobContract = await jobToPay.getContract({include: 'Contractor'})
+    const profileIsCliente = await profile.hasClient(jobContract);
+    if(!profileIsCliente) {
+        res.json({success: false, error: 'You are not the client of this job'})
+        return;
+    }
+    const canPay = profile.balance >= jobToPay.price
+    if(!canPay) {
+        res.json({success: false, error: 'Your balance is not enought to pay for this job'})
+        return;
+    }
+    profile.balance -= jobToPay.price;
+    await profile.save()
+    jobContract.Contractor.balance += jobToPay.price;
+    await jobContract.Contractor.save()
+    jobToPay.paid = true
+    jobToPay.paymentDate = new Date().toISOString()
+    await jobToPay.save()
+    res.json({status: true, message: 'Job paid successfully'})
+})
+
 
 module.exports = app;
